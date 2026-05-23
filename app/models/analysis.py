@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, JSON
 from datetime import datetime
 from uuid import UUID, uuid4
 
@@ -8,9 +9,9 @@ class AnalysisRun(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     name: str
     regulation_doc_id: UUID = Field(foreign_key="documents.id")
-    sop_doc_ids: list[UUID] = Field(default_factory=list, sa_column=Field(sa_type=list))
+    sop_doc_ids: list[UUID] = Field(default_factory=list, sa_column=Column(JSON))
 
-    status: str = "PENDING"  # PENDING, RUNNING, COMPLETED, FAILED
+    status: str = "PENDING"
     created_by: UUID = Field(foreign_key="users.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: datetime | None = None
