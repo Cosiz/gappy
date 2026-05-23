@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Project Gappy{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-8 py-12">
+    <div class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-x-3">
+            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-semibold">G</span>
+            </div>
+            <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
+        </div>
+        <div class="flex items-center gap-x-4 text-sm">
+            <div class="text-slate-500">Darren Tan</div>
+            <div class="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium">Compliance Officer</div>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <div class="text-3xl font-semibold tracking-tighter">Dashboard</div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <a href="/upload" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+            <div class="font-semibold">Upload Documents</div>
+            <div class="text-sm text-slate-500 mt-1">Add regulations or SOPs</div>
+        </a>
+        
+        <a href="/run-analysis" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+            <div class="font-semibold">Run Analysis</div>
+            <div class="text-sm text-slate-500 mt-1">Compare regulations vs SOPs</div>
+        </a>
+        
+        <a href="/report" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+            <div class="font-semibold">View Reports</div>
+            <div class="text-sm text-slate-500 mt-1">Review gap analysis findings</div>
+        </a>
+    </div>
+
+    <div>
+        <div class="section-header mb-4">Recent Analyses</div>
+        <div class="minimal-card rounded-3xl p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="font-medium">HKMA AI Governance v2.3</div>
+                    <div class="text-sm text-slate-500">Last run: 23 May 2026</div>
+                </div>
+                <a href="/report" class="text-sm px-4 py-2 rounded-2xl border border-slate-200">View Report →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

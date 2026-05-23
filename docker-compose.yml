@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  gappy:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./gappy.db:/app/gappy.db
+    environment:
+      - DATABASE_URL=sqlite:///./gappy.db
+    restart: unless-stopped

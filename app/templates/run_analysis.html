@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Run Analysis - Project Gappy{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-8 py-12">
+    <div class="flex items-center gap-x-3 mb-10">
+        <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+            <span class="text-white text-sm font-semibold">G</span>
+        </div>
+        <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
+    </div>
+
+    <div class="mb-8">
+        <div class="text-3xl font-semibold tracking-tighter">Run Gap Analysis</div>
+        <div class="text-slate-500 mt-2">Select regulation and SOP documents to compare</div>
+    </div>
+
+    <form action="/analyses/run" method="post" class="minimal-card rounded-3xl p-8 space-y-6">
+        <div>
+            <label class="section-header mb-2 block">Analysis Name</label>
+            <input type="text" name="name" value="HKMA AI Governance Gap Analysis" 
+                   class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm">
+        </div>
+
+        <div>
+            <label class="section-header mb-2 block">Regulation Document ID</label>
+            <input type="text" name="regulation_doc_id" placeholder="UUID of uploaded regulation" 
+                   class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm">
+        </div>
+
+        <div>
+            <label class="section-header mb-2 block">SOP Document IDs (comma separated)</label>
+            <input type="text" name="sop_doc_ids" placeholder="UUID1,UUID2,UUID3" 
+                   class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm">
+        </div>
+
+        <button type="submit" 
+                class="w-full py-3.5 rounded-2xl bg-black text-white font-medium text-sm">
+            Run Analysis
+        </button>
+    </form>
+
+    <div class="mt-6 text-center">
+        <a href="/dashboard" class="text-sm text-slate-500">← Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

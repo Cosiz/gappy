@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Documents - Project Gappy{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-8 py-12">
+    <div class="flex items-center gap-x-3 mb-10">
+        <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+            <span class="text-white text-sm font-semibold">G</span>
+        </div>
+        <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
+    </div>
+
+    <div class="mb-10">
+        <div class="text-3xl font-semibold tracking-tighter">Upload Documents</div>
+        <div class="text-slate-500 mt-2">Upload HKMA regulations and internal SOPs</div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Regulation Upload -->
+        <div class="minimal-card rounded-3xl p-8">
+            <div class="section-header mb-4">Regulatory Document</div>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <div class="border border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4">
+                    <input type="file" name="file" class="hidden" id="reg-file">
+                    <label for="reg-file" class="cursor-pointer text-sm text-slate-600">Click to upload PDF</label>
+                </div>
+                <input type="text" name="title" placeholder="Document Title (e.g. HKMA AI Governance 2.3)" class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm mb-4">
+                <button type="submit" class="w-full py-3 rounded-2xl bg-black text-white text-sm font-medium">Upload Regulation</button>
+            </form>
+        </div>
+
+        <!-- SOP Upload -->
+        <div class="minimal-card rounded-3xl p-8">
+            <div class="section-header mb-4">Internal SOP</div>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <div class="border border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4">
+                    <input type="file" name="file" class="hidden" id="sop-file">
+                    <label for="sop-file" class="cursor-pointer text-sm text-slate-600">Click to upload PDF</label>
+                </div>
+                <input type="text" name="title" placeholder="SOP Title (e.g. AI Governance Policy v1.4)" class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm mb-4">
+                <button type="submit" class="w-full py-3 rounded-2xl bg-black text-white text-sm font-medium">Upload SOP</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-8 text-center">
+        <a href="/dashboard" class="text-sm text-slate-500 hover:text-slate-700">← Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}
