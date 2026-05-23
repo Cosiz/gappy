@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, JSON
 from datetime import datetime
 from uuid import UUID, uuid4
 from enum import Enum as PyEnum
@@ -28,8 +29,10 @@ class Finding(SQLModel, table=True):
     label: FindingLabel
     confidence: float
     rationale: str
-    supporting_anchors: list[str] = Field(default_factory=list, sa_column=Field(sa_type= list))
-    missing_aspects: list[str] = Field(default_factory=list, sa_column=Field(sa_type= list))
+
+    # Use JSON for list fields
+    supporting_anchors: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    missing_aspects: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
     # Workflow
     officer_decision: Decision | None = None
