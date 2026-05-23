@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Documents - Project Gappy{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-8 py-12">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-10">
+        <div>
+            <div class="flex items-center gap-x-3">
+                <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                    <span class="text-white text-sm font-semibold">G</span>
+                </div>
+                <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-x-4 text-sm">
+            <div class="text-slate-500">Darren Tan</div>
+            <div class="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium">Compliance Officer</div>
+        </div>
+    </div>
+
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <div class="text-3xl font-semibold tracking-tighter">Document Library</div>
+            <div class="text-slate-500 mt-1">{{ documents|length }} documents uploaded</div>
+        </div>
+        <a href="/upload" 
+           class="px-5 py-2.5 rounded-2xl bg-black text-white text-sm font-medium flex items-center gap-x-2">
+            <span>Upload New Document</span>
+        </a>
+    </div>
+
+    {% if request.query_params.get('deleted') == '1' %}
+    <div class="mb-8 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl">
+        ✓ Document deleted successfully.
+    </div>
+    {% endif %}
+    {% if request.query_params.get('renamed') == '1' %}
+    <div class="mb-8 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl">
+        ✓ Document renamed successfully.
+    </div>
+    {% endif %}
+
+    {% if documents %}
+    <div class="minimal-card rounded-3xl overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-slate-100 bg-slate-50">
+                    <th class="text-left px-8 py-4 text-xs font-semibold text-slate-500 tracking-wider">DOCUMENT</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">TYPE</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">VERSION</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">UPLOADED</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">BY</th>
+                    <th class="text-right px-8 py-4 text-xs font-semibold text-slate-500 tracking-wider">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for doc in documents %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5">
+                        <div class="font-medium">{{ doc.title }}</div>
+                    </td>
+                    <td class="px-6 py-5">
+                        {% if doc.doc_type and doc.doc_type.value == 'REGULATION' %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                Regulation
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                                SOP
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-5 text-sm text-slate-600">{{ doc.version }}</td>
+                    <td class="px-6 py-5 text-sm text-slate-600">
+                        {{ doc.created_at.strftime('%Y-%m-%d') }}
+                    </td>
+                    <td class="px-6 py-5 text-sm text-slate-600">
+                        {{ doc.uploaded_by or 'system' }}
+                    </td>
+                    <td class="px-6 py-5 text-right" style="min-width: 380px;">
+                        <div class="flex items-center justify-end gap-3 flex-wrap">
+                        <div class="flex items-center justify-end gap-x-2 flex-wrap">
+                            <!-- View Button -->
+                            <a href="/documents/{{ doc.id }}/view" 
+                               target="_blank"
+                               class="text-sm px-4 py-2 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-100 inline-flex items-center gap-x-1 font-medium">
+                                <span>👁 View</span>
+                            </a>
+                            
+                            <!-- ✏️ Rename Button -->
+                            <button onclick="renameDocument('{{ doc.id }}', '{{ doc.title }}')"
+                                    class="text-sm px-4 py-2 rounded-xl border-2 border-amber-300 text-amber-700 hover:bg-amber-100 font-medium">
+                                ✏️ Rename
+                            </button>
+                            
+                            <!-- 🗑 Delete Button -->
+                            <form action="/documents/{{ doc.id }}/delete" method="post" class="inline" 
+                                  onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                <button type="submit" 
+                                        class="text-sm px-4 py-2 rounded-xl border-2 border-red-300 text-red-700 hover:bg-red-100 font-medium">
+                                    🗑 Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="minimal-card rounded-3xl p-12 text-center">
+        <div class="text-slate-400 mb-4">No documents uploaded yet.</div>
+        <a href="/upload" class="text-sm px-5 py-2.5 rounded-2xl border border-slate-300 inline-block">
+            Upload your first document
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="mt-10 text-center">
+        <a href="/dashboard" class="text-sm text-slate-500 hover:text-slate-700">← Back to Dashboard</a>
+    </div>
+</div>
+
+<script>
+function renameDocument(docId, currentTitle) {
+    const newTitle = prompt("Enter new document title:", currentTitle);
+    if (newTitle && newTitle.trim() !== "" && newTitle !== currentTitle) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = `/documents/${docId}/rename`;
+        
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "new_title";
+        input.value = newTitle.trim();
+        form.appendChild(input);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

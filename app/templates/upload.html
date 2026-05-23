@@ -13,33 +13,79 @@
 
     <div class="mb-10">
         <div class="text-3xl font-semibold tracking-tighter">Upload Documents</div>
-        <div class="text-slate-500 mt-2">Upload HKMA regulations and internal SOPs</div>
+        <div class="text-slate-500 mt-2">Upload HKMA regulations and internal SOPs (multiple files supported)</div>
     </div>
+
+    <!-- Success Message -->
+    {% if request.query_params.get("success") == "1" %}
+    <div class="mb-8 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl">
+        {% set count = request.query_params.get("count", "1") %}
+        ✓ {{ count }} document(s) uploaded successfully.
+        <a href="/documents" class="ml-4 underline">View in Document Library →</a>
+    </div>
+    {% endif %}
+
+    <!-- Error Messages -->
+    {% if request.query_params.get('error') %}
+    <div class="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl">
+        {% if request.query_params.get('error') == 'title_required' %}
+            Please provide a document title.
+        {% elif request.query_params.get('error') == 'file_required' %}
+            Please select a file to upload.
+        {% elif request.query_params.get('error') == 'doc_type_required' %}
+            Please select a document type.
+        {% elif request.query_params.get('error') == 'upload_failed' %}
+            Upload failed. Please try again.
+        {% else %}
+            An error occurred. Please check your input.
+        {% endif %}
+    </div>
+    {% endif %}
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Regulation Upload -->
         <div class="minimal-card rounded-3xl p-8">
-            <div class="section-header mb-4">Regulatory Document</div>
-            <form action="/upload" method="post" enctype="multipart/form-data">
-                <div class="border border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4">
-                    <input type="file" name="file" class="hidden" id="reg-file">
-                    <label for="reg-file" class="cursor-pointer text-sm text-slate-600">Click to upload PDF</label>
+            <div class="section-header mb-4">Regulatory Documents</div>
+            <form action="/documents/upload" method="post" enctype="multipart/form-data">
+                <div id="reg-dropzone" class="border border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4 relative transition-colors min-h-[140px]">
+                    <input type="file" name="file" class="hidden" id="reg-file" accept=".pdf" multiple required onchange="showSelectedFiles(this, 'reg-file-list', 'reg-file-label')">
+                    <label for="reg-file" class="cursor-pointer text-sm text-slate-600 block">
+                        <div class="flex flex-col items-center gap-y-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span id="reg-file-label">Click or drag & drop multiple PDFs</span>
+                        </div>
+                    </label>
+                    <div id="reg-file-list" class="hidden mt-4 text-left text-sm"></div>
                 </div>
-                <input type="text" name="title" placeholder="Document Title (e.g. HKMA AI Governance 2.3)" class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm mb-4">
-                <button type="submit" class="w-full py-3 rounded-2xl bg-black text-white text-sm font-medium">Upload Regulation</button>
+
+                <input type="text" name="title" placeholder="Base title (optional - filename used if empty)" class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm mb-4">
+                <input type="hidden" name="doc_type" value="REGULATION">
+                <button type="submit" class="w-full py-3 rounded-2xl bg-black text-white text-sm font-medium">Upload Regulations</button>
             </form>
         </div>
 
         <!-- SOP Upload -->
         <div class="minimal-card rounded-3xl p-8">
-            <div class="section-header mb-4">Internal SOP</div>
-            <form action="/upload" method="post" enctype="multipart/form-data">
-                <div class="border border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4">
-                    <input type="file" name="file" class="hidden" id="sop-file">
-                    <label for="sop-file" class="cursor-pointer text-sm text-slate-600">Click to upload PDF</label>
+            <div class="section-header mb-4">Internal SOPs</div>
+            <form action="/documents/upload" method="post" enctype="multipart/form-data">
+                <div id="sop-dropzone" class="border border-dashed border-slate-300 rounded-2xl p-8 text-center mb-4 relative transition-colors min-h-[140px]">
+                    <input type="file" name="file" class="hidden" id="sop-file" accept=".pdf" multiple required onchange="showSelectedFiles(this, 'sop-file-list', 'sop-file-label')">
+                    <label for="sop-file" class="cursor-pointer text-sm text-slate-600 block">
+                        <div class="flex flex-col items-center gap-y-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span id="sop-file-label">Click or drag & drop multiple PDFs</span>
+                        </div>
+                    </label>
+                    <div id="sop-file-list" class="hidden mt-4 text-left text-sm"></div>
                 </div>
-                <input type="text" name="title" placeholder="SOP Title (e.g. AI Governance Policy v1.4)" class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm mb-4">
-                <button type="submit" class="w-full py-3 rounded-2xl bg-black text-white text-sm font-medium">Upload SOP</button>
+
+                <input type="text" name="title" placeholder="Base title (optional - filename used if empty)" class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm mb-4">
+                <input type="hidden" name="doc_type" value="SOP">
+                <button type="submit" class="w-full py-3 rounded-2xl bg-black text-white text-sm font-medium">Upload SOPs</button>
             </form>
         </div>
     </div>
@@ -48,4 +94,90 @@
         <a href="/dashboard" class="text-sm text-slate-500 hover:text-slate-700">← Back to Dashboard</a>
     </div>
 </div>
+
+<script>
+function showSelectedFiles(input, listContainerId, labelId) {
+    const listContainer = document.getElementById(listContainerId);
+    const label = document.getElementById(labelId);
+
+    listContainer.innerHTML = '';
+    listContainer.classList.remove('hidden');
+
+    if (input.files.length > 0) {
+        if (label) label.style.display = 'none';
+
+        const title = document.createElement('div');
+        title.className = 'text-emerald-600 font-medium mb-2 flex items-center gap-x-2';
+        title.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 01-9 9 9 9 0 01-9-9 9 9 0 019-9 9 9 0 019 9z" />
+            </svg>
+            ${input.files.length} file(s) selected
+        `;
+        listContainer.appendChild(title);
+
+        for (let i = 0; i < input.files.length; i++) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'flex items-center gap-x-2 text-slate-600 py-1 px-2 bg-white rounded-lg border border-slate-100 mb-1';
+            fileItem.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span class="truncate">${input.files[i].name}</span>
+                <span class="text-xs text-slate-400 ml-auto">${(input.files[i].size / 1024 / 1024).toFixed(1)} MB</span>
+            `;
+            listContainer.appendChild(fileItem);
+        }
+    }
+}
+
+function setupDragAndDrop(dropZoneId, inputId, listContainerId, labelId) {
+    const dropZone = document.getElementById(dropZoneId);
+    const input = document.getElementById(inputId);
+    const listContainer = document.getElementById(listContainerId);
+    const label = document.getElementById(labelId);
+
+    if (!dropZone || !input) return;
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.add('border-emerald-400', 'bg-emerald-50');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.remove('border-emerald-400', 'bg-emerald-50');
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        const pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+
+        if (pdfFiles.length > 0) {
+            // Create a new DataTransfer to assign multiple files
+            const dt = new DataTransfer();
+            pdfFiles.forEach(file => dt.items.add(file));
+            input.files = dt.files;
+
+            // Trigger the change handler
+            showSelectedFiles(input, listContainerId, labelId);
+        } else if (files.length > 0) {
+            alert('Please upload PDF files only.');
+        }
+    }, false);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Regulation
+    setupDragAndDrop('reg-dropzone', 'reg-file', 'reg-file-list', 'reg-file-label');
+    // SOP
+    setupDragAndDrop('sop-dropzone', 'sop-file', 'sop-file-list', 'sop-file-label');
+});
+</script>
 {% endblock %}

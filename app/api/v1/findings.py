@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 from app.core.database import get_session
 from app.models.finding import Finding, Decision, FindingStatus
@@ -16,8 +17,8 @@ def get_finding(finding_id: str, session: Session = Depends(get_session)):
 @router.post("/{finding_id}/review/officer")
 def officer_review(
     finding_id: str,
-    decision: Decision,
-    comment: str | None = None,
+    decision: Decision = Form(...),
+    comment: str | None = Form(None),
     session: Session = Depends(get_session)
 ):
     finding = session.get(Finding, finding_id)
@@ -26,15 +27,19 @@ def officer_review(
     
     try:
         updated = submit_officer_decision(finding, decision, comment, session)
-        return {"status": "success", "finding_id": str(updated.id), "new_status": updated.status}
+        # Redirect back to report with success message
+        return RedirectResponse(
+            url="/report?review_success=1&role=officer",
+            status_code=303
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))
 
 @router.post("/{finding_id}/review/supervisor")
 def supervisor_review(
     finding_id: str,
-    decision: Decision,
-    comment: str | None = None,
+    decision: Decision = Form(...),
+    comment: str | None = Form(None),
     session: Session = Depends(get_session)
 ):
     finding = session.get(Finding, finding_id)
@@ -43,6 +48,9 @@ def supervisor_review(
     
     try:
         updated = submit_supervisor_decision(finding, decision, comment, session)
-        return {"status": "success", "finding_id": str(updated.id), "new_status": updated.status}
+        return RedirectResponse(
+            url="/report?review_success=1&role=supervisor",
+            status_code=303
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))

@@ -3,7 +3,7 @@
 {% block title %}Dashboard - Project Gappy{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-8 py-12">
+<div class="max-w-6xl mx-auto px-8 py-12">
     <div class="flex items-center justify-between mb-10">
         <div class="flex items-center gap-x-3">
             <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
@@ -17,36 +17,61 @@
         </div>
     </div>
 
-    <div class="mb-8">
+    <div class="mb-10">
         <div class="text-3xl font-semibold tracking-tighter">Dashboard</div>
+        <div class="text-slate-500 mt-1">Overview of your regulatory compliance work</div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        <a href="/upload" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
-            <div class="font-semibold">Upload Documents</div>
-            <div class="text-sm text-slate-500 mt-1">Add regulations or SOPs</div>
-        </a>
-        
-        <a href="/run-analysis" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
-            <div class="font-semibold">Run Analysis</div>
-            <div class="text-sm text-slate-500 mt-1">Compare regulations vs SOPs</div>
-        </a>
-        
-        <a href="/report" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
-            <div class="font-semibold">View Reports</div>
-            <div class="text-sm text-slate-500 mt-1">Review gap analysis findings</div>
-        </a>
-    </div>
-
-    <div>
-        <div class="section-header mb-4">Recent Analyses</div>
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <div class="minimal-card rounded-3xl p-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <div class="font-medium">HKMA AI Governance v2.3</div>
-                    <div class="text-sm text-slate-500">Last run: 23 May 2026</div>
-                </div>
-                <a href="/report" class="text-sm px-4 py-2 rounded-2xl border border-slate-200">View Report →</a>
+            <div class="text-sm text-slate-500">Total Documents</div>
+            <div class="text-4xl font-semibold tracking-tighter mt-2">{{ total_documents }}</div>
+        </div>
+        <div class="minimal-card rounded-3xl p-6">
+            <div class="text-sm text-slate-500">Pending Officer Review</div>
+            <div class="text-4xl font-semibold tracking-tighter mt-2 text-amber-600">{{ pending_officer }}</div>
+        </div>
+        <div class="minimal-card rounded-3xl p-6">
+            <div class="text-sm text-slate-500">Pending Supervisor Review</div>
+            <div class="text-4xl font-semibold tracking-tighter mt-2 text-blue-600">{{ pending_supervisor }}</div>
+        </div>
+        <div class="minimal-card rounded-3xl p-6">
+            <div class="text-sm text-slate-500">Total Findings</div>
+            <div class="text-4xl font-semibold tracking-tighter mt-2">{{ total_findings }}</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <div class="section-header mb-4">Quick Actions</div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="/documents" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+                <div class="font-semibold">Document Library</div>
+                <div class="text-sm text-slate-500 mt-1">View all uploaded documents</div>
+            </a>
+            <a href="/upload" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+                <div class="font-semibold">Upload Documents</div>
+                <div class="text-sm text-slate-500 mt-1">Add regulations or SOPs</div>
+            </a>
+            <a href="/run-analysis" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+                <div class="font-semibold">Run Analysis</div>
+                <div class="text-sm text-slate-500 mt-1">Compare regulations vs SOPs</div>
+            </a>
+            <a href="/analyses/report" class="minimal-card rounded-3xl p-6 hover:border-slate-300 transition-colors">
+                <div class="font-semibold">View Reports</div>
+                <div class="text-sm text-slate-500 mt-1">Review gap analysis findings</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div>
+        <div class="section-header mb-4">Getting Started</div>
+        <div class="minimal-card rounded-3xl p-8">
+            <div class="text-slate-600">
+                Welcome to Project Gappy. Start by uploading your regulatory documents and internal SOPs, 
+                then run a gap analysis to identify compliance gaps.
             </div>
         </div>
     </div>

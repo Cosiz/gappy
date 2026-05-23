@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import uuid4
 from enum import Enum as PyEnum
 
 class UserRole(str, PyEnum):
@@ -11,7 +11,7 @@ class UserRole(str, PyEnum):
 class User(SQLModel, table=True):
     __tablename__ = "users"
     
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: str = Field(default_factory=lambda: str(uuid4()), primary_key=True)
     email: str = Field(unique=True, index=True)
     full_name: str
     role: UserRole
