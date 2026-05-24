@@ -159,10 +159,23 @@
                             </button>
                         </form>
                         
-                        <button type="button" onclick="requestClarification('{{ finding.id }}')"
-                                class="px-4 py-2 text-sm rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-medium transition-colors">
-                            ❓ Request Clarification
-                        </button>
+                        <form action="/findings/{{ finding.id }}/clarify" method="post" class="inline">
+                            <input type="hidden" name="comment" value="Clarification requested by officer">
+                            <button type="submit" 
+                                    class="px-4 py-2 text-sm rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-medium transition-colors">
+                                ❓ Request Clarification
+                            </button>
+                        </form>
+                        
+                        {% if finding.undo_until %}
+                        <form action="/findings/{{ finding.id }}/undo" method="post" class="inline" 
+                              onsubmit="return confirm('Undo this decision?')">
+                            <button type="submit" 
+                                    class="px-4 py-2 text-sm rounded-xl border border-slate-300 hover:bg-slate-50 font-medium transition-colors">
+                                ↩ Undo
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                     <div class="text-xs text-slate-500 mt-2">These actions update the finding status and create an audit trail.</div>
                 </div>

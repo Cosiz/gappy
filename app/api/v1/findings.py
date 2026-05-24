@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 from app.core.database import get_session
 from app.models.finding import Finding, Decision, FindingStatus
 from app.services.workflow import submit_officer_decision, submit_supervisor_decision
+from app.core.security import require_officer, require_supervisor
 
 router = APIRouter(prefix="/findings", tags=["findings"])
 
@@ -19,7 +20,8 @@ def officer_review(
     finding_id: str,
     decision: Decision = Form(...),
     comment: str | None = Form(None),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    role: str = Depends(require_officer)
 ):
     finding = session.get(Finding, finding_id)
     if not finding:
@@ -40,7 +42,8 @@ def supervisor_review(
     finding_id: str,
     decision: Decision = Form(...),
     comment: str | None = Form(None),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    role: str = Depends(require_supervisor)
 ):
     finding = session.get(Finding, finding_id)
     if not finding:
