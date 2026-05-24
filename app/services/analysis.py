@@ -155,6 +155,49 @@ def validate_citations(assessment, retrieved_chunks):
     assessment["evidence"] = validated
     assessment["confidence"] = round(new_conf, 2)
     return assessment
+
+
+# =============================================================================
+# STAGE 3.5: Multi-Factor Confidence Scoring (Phase 2 Enhancement)
+# =============================================================================
+
+def compute_confidence_score(
+    assessment: Dict[str, Any],
+    requirement: Dict[str, Any],
+    retrieved_chunks: List[str],
+    validated_evidence: List[str]
+) -> float:
+    """
+    Compute a multi-factor confidence score based on:
+    - Retrieval quality (how many relevant chunks were found)
+    - Coverage label strength (COVERED > PARTIAL > MISSING)
+    - Citation validation ratio (how much evidence was actually verified)
+    - Base LLM confidence
+    """
+    base_conf = float(assessment.get("confidence", 0.5))
+    label = assessment.get("label", "MISSING")
+
+    # Factor 1: Retrieval quality
+    retrieval_score = min(1.0, len(retrieved_chunks) / 5.0)  # 5+ chunks = full score
+
+    # Factor 2: Label strength
+    label_weight = {"COVERED": 1.0, "PARTIAL": 0.75, "MISSING": 0.4}.get(label, 0.5)
+
+    # Factor 3: Citation validation ratio
+    evidence = assessment.get("evidence", [])
+    validation_ratio = len(validated_evidence) / max(len(evidence), 1) if evidence else 0.3
+
+    # Combine factors (weighted average)
+    final_score = (
+        0.25 * base_conf +
+        0.25 * retrieval_score +
+        0.25 * label_weight +
+        0.25 * validation_ratio
+    )
+
+    # Clamp and round
+    final_score = max(0.1, min(0.98, final_score))
+    return round(final_score, 2)
 def assess_requirement(requirement: Dict[str, Any], sop_context: str) -> Dict[str, Any]:
     """
     Assess how well SOPs cover a single regulatory requirement using MiniMax.
@@ -273,7 +316,7 @@ def create_finding_from_assessment(
         label=label_map.get(assessment.get("label", "MISSING"), FindingLabel.MISSING),
         confidence=float(assessment.get("confidence", 0.5)),
         rationale=assessment.get("rationale", "No rationale provided."),
-        supporting_anchors=[],
+        supporting_anchors=assessment.get("evidence", [])[:3],
         missing_aspects=assessment.get("missing_aspects", []),
         evidence=assessment.get("evidence", []),
         status=FindingStatus.PENDING_OFFICER
@@ -328,6 +371,10 @@ def run_gap_analysis(
             chunk_context = "\n\n".join(relevant_chunks) if relevant_chunks else sop_context[:4000]
             assessment = assess_requirement(req, chunk_context)
             assessment = validate_citations(assessment, relevant_chunks)
+            # Apply multi-factor confidence scoring
+            validated_evidence = assessment.get("evidence", [])
+            final_conf = compute_confidence_score(assessment, req, relevant_chunks, validated_evidence)
+            assessment["confidence"] = final_conf
             finding = create_finding_from_assessment(analysis_id, req, assessment)
             
             session.add(finding)
