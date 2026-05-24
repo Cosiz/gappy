@@ -5,19 +5,6 @@
 {% block content %}
 <div class="max-w-5xl mx-auto px-8 py-12">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-10">
-        <div class="flex items-center gap-x-3">
-            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span class="text-white text-sm font-semibold">G</span>
-            </div>
-            <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
-        </div>
-        <div class="flex items-center gap-x-4 text-sm">
-            <div class="text-slate-500">Darren Tan</div>
-            <div class="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium">Compliance Officer</div>
-        </div>
-    </div>
-
     <div class="flex items-end justify-between mb-8">
         <div>
             <div class="text-3xl font-semibold tracking-tighter">Gap Analysis Report</div>
@@ -83,8 +70,29 @@
     {% endif %}
 
     <!-- Findings -->
-    {% for finding in findings %}
+    <!-- Analysis Selector -->
+    {% if analyses %}
+    <div class="mb-8">
+        <div class="section-header mb-2">Select Report</div>
+        <form method="get" action="/analyses/report" class="flex gap-3">
+            <select name="analysis_id" onchange="this.form.submit()" 
+                    class="px-4 py-2.5 rounded-2xl border border-slate-300 text-sm min-w-[280px]">
+                {% for a in analyses %}
+                <option value="{{ a.id }}" {% if a.id == analysis.id %}selected{% endif %}>
+                    {{ a.name or 'Analysis' }} — {{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '' }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-5 py-2.5 rounded-2xl border border-slate-300 text-sm">View</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% for finding in findings %}{% set finding_num = loop.index %}
     <div class="minimal-card rounded-3xl p-8 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="px-3 py-1 bg-slate-900 text-white text-xs font-mono rounded-full">Finding {{ finding_num }}</div>
+        </div>
         <div class="grid grid-cols-12 gap-8">
             <!-- Left Column -->
             <div class="col-span-12 lg:col-span-5">
@@ -129,6 +137,40 @@
                 </div>
 
                 <div class="text-sm text-slate-600 mb-6">{{ finding.rationale }}</div>
+
+                <!-- Decision Actions (only for officer when pending) -->
+                {% if finding.status == 'PENDING_OFFICER' %}
+                <div class="mb-6 pt-4 border-t border-slate-100">
+                    <div class="section-header mb-3">Your Decision</div>
+                    <div class="flex flex-wrap gap-2">
+                        <form action="/findings/{{ finding.id }}/review/officer" method="post" class="inline">
+                            <input type="hidden" name="decision" value="ACCEPT">
+                            <button type="submit" 
+                                    class="px-4 py-2 text-sm rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors">
+                                ✓ Accept
+                            </button>
+                        </form>
+                        
+                        <form action="/findings/{{ finding.id }}/review/officer" method="post" class="inline">
+                            <input type="hidden" name="decision" value="DISPUTE">
+                            <button type="submit" 
+                                    class="px-4 py-2 text-sm rounded-xl bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
+                                ✗ Dispute
+                            </button>
+                        </form>
+                        
+                        <button type="button" onclick="requestClarification('{{ finding.id }}')"
+                                class="px-4 py-2 text-sm rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-medium transition-colors">
+                            ❓ Request Clarification
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">These actions update the finding status and create an audit trail.</div>
+                </div>
+                {% elif finding.status == 'PENDING_SUPERVISOR' %}
+                <div class="mb-6 pt-4 border-t border-slate-100">
+                    <div class="text-xs text-slate-500">Waiting for Supervisor review</div>
+                </div>
+                {% endif %}
 
                 <!-- Missing Aspects -->
                 {% if finding.missing_aspects %}

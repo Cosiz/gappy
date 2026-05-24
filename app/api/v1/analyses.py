@@ -24,66 +24,34 @@ def _safe(val: Any) -> Any:
 
 
 @router.get("/report", response_class=HTMLResponse)
-async def view_report(request: Request, session: Session = Depends(get_session)):
-    """View Reports page - safe rendering."""
-    latest_run = session.exec(
+async def view_report(request: Request, analysis_id: str = None, session: Session = Depends(get_session)):
+    """View gap analysis reports. Supports selecting different historical runs via analysis_id."""
+    from fastapi.responses import HTMLResponse
+
+    # Fetch all analysis runs
+    all_runs = session.exec(
         select(AnalysisRun).order_by(AnalysisRun.created_at.desc())
-    ).first()
-
-    if not latest_run:
-        html = """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Gap Analysis Report - Project Gappy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-white">
-<div class="max-w-5xl mx-auto px-8 py-12">
-    <div class="flex items-center justify-between mb-10">
-        <div class="flex items-center gap-x-3">
-            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span class="text-white text-sm font-semibold">G</span>
-            </div>
-            <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
-        </div>
-        <div class="flex items-center gap-x-4 text-sm">
-            <div class="text-slate-500">Darren Tan</div>
-            <div class="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium">Compliance Officer</div>
-        </div>
-    </div>
-
-    <div class="flex items-end justify-between mb-8">
-        <div>
-            <div class="text-3xl font-semibold tracking-tighter">Gap Analysis Report</div>
-            <div class="text-slate-500 mt-1">0 findings found</div>
-        </div>
-    </div>
-
-    <div class="minimal-card rounded-3xl p-16 text-center mt-8 border border-slate-200">
-        <div class="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-            <span class="text-3xl">📋</span>
-        </div>
-        <div class="text-2xl font-semibold tracking-tighter mb-3">No gap analysis reports yet</div>
-        <div class="text-slate-500 max-w-md mx-auto mb-8">
-            Upload your regulatory documents and SOPs, then run a gap analysis to generate compliance findings.
-        </div>
-        <div class="flex justify-center gap-4">
-            <a href="/documents" class="px-6 py-3 rounded-2xl border border-slate-300 text-sm font-medium hover:bg-slate-50">Document Library</a>
-            <a href="/run-analysis" class="px-6 py-3 rounded-2xl bg-black text-white text-sm font-medium">Run New Analysis →</a>
-        </div>
-    </div>
-</div>
-</body>
-</html>
-"""
-        return HTMLResponse(content=html)
-
-    # Convert findings to plain dicts
-    raw_findings = session.exec(
-        select(Finding).where(Finding.analysis_id == latest_run.id)
     ).all()
+
+    if not all_runs:
+        return HTMLResponse(content="""
+        <!DOCTYPE html><html><head><meta charset="utf-8"><title>No Reports</title>
+        <script src="https://cdn.tailwindcss.com"></script></head>
+        <body class="bg-[#fafafa]"><div class="max-w-5xl mx-auto px-8 py-12">
+        <div class="text-3xl font-semibold tracking-tighter mb-4">No gap analysis reports yet</div>
+        <a href="/run-analysis" class="px-5 py-2.5 rounded-2xl bg-black text-white text-sm">Run New Analysis →</a>
+        </div></body></html>
+        """)
+
+    # Select the run to display
+    selected_run = None
+    if analysis_id:
+        selected_run = next((r for r in all_runs if str(r.id) == analysis_id), None)
+    if not selected_run:
+        selected_run = all_runs[0]
+
+    # Load findings
+    raw_findings = session.exec(select(Finding).where(Finding.analysis_id == selected_run.id)).all()
 
     findings = []
     for f in raw_findings:
@@ -94,54 +62,34 @@ async def view_report(request: Request, session: Session = Depends(get_session))
             "confidence": f.confidence,
             "rationale": f.rationale or "",
             "missing_aspects": f.missing_aspects if isinstance(f.missing_aspects, list) else [],
-            "supporting_sop_anchors": f.supporting_anchors if isinstance(f.supporting_anchors, list) else [],
+            "supporting_sop_anchors": getattr(f, 'supporting_anchors', []) or [],
             "status": _safe(f.status),
         })
 
-    # Convert analysis run to plain dict (avoid passing SQLModel with JSON fields)
     analysis = {
-        "id": str(latest_run.id),
-        "name": latest_run.name,
-        "created_at": latest_run.created_at,
+        "id": str(selected_run.id),
+        "name": selected_run.name or "Gap Analysis",
+        "created_at": selected_run.created_at,
     }
 
+    # Build list for dropdown
+    analyses_list = [{"id": str(r.id), "name": r.name or f"Analysis {str(r.id)[:8]}", "created_at": r.created_at} for r in all_runs]
+
+    # Load documents
     documents = []
-    
-    # Load all Regulation documents (new multi-reg support)
-    reg_ids = getattr(latest_run, 'regulation_doc_ids', None) or []
-    if not reg_ids and latest_run.regulation_doc_id:
-        reg_ids = [latest_run.regulation_doc_id]  # fallback for legacy runs
-    
-    for reg_id in reg_ids:
-        reg_doc = session.get(Document, reg_id)
-        if reg_doc:
-            documents.append({
-                "id": str(reg_doc.id),
-                "title": reg_doc.title,
-                "type": "REGULATION"
-            })
-    
-    # Load SOP documents
-    for sop_id in (latest_run.sop_doc_ids or []):
-        sop_doc = session.get(Document, sop_id)
-        if sop_doc:
-            documents.append({
-                "id": str(sop_doc.id),
-                "title": sop_doc.title,
-                "type": "SOP"
-            })
+    reg_ids = getattr(selected_run, 'regulation_doc_ids', None) or []
+    if not reg_ids and getattr(selected_run, 'regulation_doc_id', None):
+        reg_ids = [selected_run.regulation_doc_id]
+    for rid in reg_ids:
+        d = session.get(Document, rid)
+        if d: documents.append({"id": str(d.id), "title": d.title, "type": "REGULATION"})
+    for sid in (getattr(selected_run, 'sop_doc_ids', None) or []):
+        d = session.get(Document, sid)
+        if d: documents.append({"id": str(d.id), "title": d.title, "type": "SOP"})
 
-    # Use direct render to avoid TemplateResponse caching issues
     template = templates.env.get_template("report.html")
-    html = template.render(
-        request=request,
-        findings=findings,
-        documents=documents,
-        analysis=analysis
-    )
+    html = template.render(request=request, findings=findings, documents=documents, analysis=analysis, analyses=analyses_list)
     return HTMLResponse(content=html)
-
-
 @router.post("/run")
 async def run_analysis(
     name: str = Form(...),

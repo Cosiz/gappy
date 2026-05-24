@@ -5,21 +5,6 @@
 {% block content %}
 <div class="max-w-6xl mx-auto px-8 py-12">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-10">
-        <div>
-            <div class="flex items-center gap-x-3">
-                <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                    <span class="text-white text-sm font-semibold">G</span>
-                </div>
-                <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-x-4 text-sm">
-            <div class="text-slate-500">Darren Tan</div>
-            <div class="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium">Compliance Officer</div>
-        </div>
-    </div>
-
     <div class="mb-8 flex items-center justify-between">
         <div>
             <div class="text-3xl font-semibold tracking-tighter">Document Library</div>
@@ -43,7 +28,7 @@
     {% endif %}
 
     {% if documents %}
-    <div class="minimal-card rounded-3xl overflow-hidden">
+    <div class="minimal-card rounded-3xl overflow-x-auto">
         <table class="w-full">
             <thead>
                 <tr class="border-b border-slate-100 bg-slate-50">
@@ -52,14 +37,14 @@
                     <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">VERSION</th>
                     <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">UPLOADED</th>
                     <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 tracking-wider">BY</th>
-                    <th class="text-right px-8 py-4 text-xs font-semibold text-slate-500 tracking-wider">ACTIONS</th>
+                    <th class="text-right px-8 py-4 text-xs font-semibold text-slate-500 tracking-wider" style="min-width: 280px;">ACTIONS</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for doc in documents %}
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-8 py-5">
-                        <div class="font-medium">{{ doc.title }}</div>
+                        <div class="font-medium truncate max-w-[420px]" title="{{ doc.title }}">{{ doc.title }}</div>
                     </td>
                     <td class="px-6 py-5">
                         {% if doc.doc_type and doc.doc_type.value == 'REGULATION' %}
@@ -79,9 +64,8 @@
                     <td class="px-6 py-5 text-sm text-slate-600">
                         {{ doc.uploaded_by or 'system' }}
                     </td>
-                    <td class="px-6 py-5 text-right" style="min-width: 380px;">
-                        <div class="flex items-center justify-end gap-3 flex-wrap">
-                        <div class="flex items-center justify-end gap-x-2 flex-wrap">
+                    <td class="px-8 py-5 text-right whitespace-nowrap" style="min-width: 340px;">
+                        <div class="flex items-center justify-end gap-x-2 flex-nowrap">
                             <!-- View Button -->
                             <a href="/documents/{{ doc.id }}/view" 
                                target="_blank"

@@ -1,22 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}Run Analysis - Project Gappy{% endblock %}
+{% block title %}Run Analysis - Project Gappy
+<script>
+function startAnalysis(e) {
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const loading = document.getElementById('loadingState');
+    
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = 'Starting analysis...';
+    if (loading) loading.classList.remove('hidden');
+}
+const form = document.getElementById('analysisForm');
+if (form) form.addEventListener('submit', startAnalysis);
+</script>
+
+{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-8 py-12">
-    <div class="flex items-center gap-x-3 mb-10">
-        <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-            <span class="text-white text-sm font-semibold">G</span>
-        </div>
-        <span class="text-2xl font-semibold tracking-tighter">Project Gappy</span>
-    </div>
-
     <div class="mb-8">
         <div class="text-3xl font-semibold tracking-tighter">Run Gap Analysis</div>
         <div class="text-slate-500 mt-2">Select regulation(s) and SOP document(s) to compare</div>
     </div>
 
-    <form action="/analyses/run" method="post" class="space-y-8">
+    <form action="/analyses/run" method="post" class="space-y-8" id="analysisForm" onsubmit="startAnalysis(event)">
         <!-- Analysis Name -->
         <div class="minimal-card rounded-3xl p-8">
             <label class="section-header mb-3 block">Analysis Name</label>
@@ -68,14 +76,39 @@
             {% endif %}
         </div>
 
-        <button type="submit" 
-                class="w-full py-4 rounded-3xl bg-black text-white font-medium text-sm tracking-wide">
-            Run Gap Analysis
+        <button type="submit" id="submitBtn"
+                class="w-full py-4 rounded-3xl bg-black text-white font-medium text-sm tracking-wide disabled:opacity-60 transition-all">
+            <span id="btnText">Run Gap Analysis</span>
         </button>
+        
+        <div id="loadingState" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-2xl text-sm text-blue-700">
+            <div class="flex items-center gap-3">
+                <div class="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                <div>
+                    <div class="font-medium">Gap analysis in progress...</div>
+                    <div class="text-xs mt-0.5">This typically takes 30–120 seconds. Please do not refresh or close this tab.</div>
+                </div>
+            </div>
+        </div>
     </form>
 
     <div class="mt-8 text-center">
         <a href="/dashboard" class="text-sm text-slate-500">← Back to Dashboard</a>
     </div>
 </div>
+
+<script>
+function startAnalysis(e) {
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const loading = document.getElementById('loadingState');
+    
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = 'Starting analysis...';
+    if (loading) loading.classList.remove('hidden');
+}
+const form = document.getElementById('analysisForm');
+if (form) form.addEventListener('submit', startAnalysis);
+</script>
+
 {% endblock %}
