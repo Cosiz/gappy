@@ -54,3 +54,43 @@ def supervisor_review(
         )
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+@router.post("/{finding_id}/undo")
+def undo_finding(finding_id: str, session: Session = Depends(get_session)):
+    from app.services.workflow import undo_officer_decision, can_undo
+    finding = session.get(Finding, finding_id)
+    if not finding:
+        raise HTTPException(404, "Finding not found")
+    
+    if not can_undo(finding):
+        raise HTTPException(400, "Undo window has expired")
+    
+    try:
+        updated = undo_officer_decision(finding, session)
+        return RedirectResponse(
+            url="/report?undo_success=1",
+            status_code=303
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@router.post("/{finding_id}/clarify")
+def request_clarification_endpoint(
+    finding_id: str,
+    comment: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    from app.services.workflow import request_clarification
+    finding = session.get(Finding, finding_id)
+    if not finding:
+        raise HTTPException(404, "Finding not found")
+    
+    try:
+        updated = request_clarification(finding, comment, session)
+        return RedirectResponse(
+            url="/report?clarification_requested=1",
+            status_code=303
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
