@@ -133,11 +133,28 @@ def retrieve_relevant_chunks(requirement: Dict[str, Any], sop_context: str, top_
     return [chunk for score, chunk in scored_chunks[:top_k] if score > 0]
 
 
+def validate_citations(assessment, retrieved_chunks):
+    evidence = assessment.get("evidence", [])
+    if not evidence or not retrieved_chunks:
+        return assessment
 
-# =============================================================================
-# STAGE 3: LLM Assessment
-# =============================================================================
+    validated = []
+    matches = 0
+    for quote in evidence:
+        parts = quote.split(":", 1)
+        clean = parts[1].strip().strip('"') if len(parts) > 1 else quote.strip().strip('"')
+        for chunk in retrieved_chunks:
+            if len(clean) > 20 and clean.lower() in chunk.lower():
+                matches += 1
+                validated.append(quote)
+                break
 
+    conf = float(assessment.get("confidence", 0.5))
+    ratio = matches / max(len(evidence), 1)
+    new_conf = max(0.1, min(0.95, conf * (0.6 + 0.4 * ratio)))
+    assessment["evidence"] = validated
+    assessment["confidence"] = round(new_conf, 2)
+    return assessment
 def assess_requirement(requirement: Dict[str, Any], sop_context: str) -> Dict[str, Any]:
     """
     Assess how well SOPs cover a single regulatory requirement using MiniMax.
@@ -154,20 +171,26 @@ RELEVANT SOP CONTENT:
 TASK:
 Determine how well the SOPs cover this requirement.
 
+You MUST return actual quotes from the SOPs as evidence.
+
 Return ONLY valid JSON:
 {{
   "label": "COVERED" | "PARTIAL" | "MISSING",
   "confidence": 0.0-1.0,
-  "rationale": "Explain with reference to specific SOPs",
-  "missing_aspects": ["list", "of", "gaps"] or [],
-  "evidence": ["key", "quotes", "from", "SOPs"]
+  "rationale": "Explain with reference to specific SOP sections",
+  "missing_aspects": ["list", "of", "specific gaps"] or [],
+  "evidence": [
+    "SOP-12 §4.1: 'PCB maintains a dedicated alternate business site at Kowloon East...'",
+    "SOP-11 §3.1: 'BIAs are refreshed every 2 years...'"
+  ]
 }}
 
 Rules:
 - "COVERED": SOPs fully address the requirement with clear procedures.
 - "PARTIAL": SOPs address some but not all aspects.
 - "MISSING": Little or no relevant SOP content.
-- Be specific. Reference SOP titles when possible.
+- Evidence MUST contain real quotes from the provided SOP text (with SOP name + section if possible).
+- Never invent evidence. If no good quote exists, leave evidence empty.
 """
 
     minimax_api_key = os.getenv("MINIMAX_CN_API_KEY") or os.getenv("MINIMAX_API_KEY")
@@ -304,6 +327,7 @@ def run_gap_analysis(
             relevant_chunks = retrieve_relevant_chunks(req, sop_context)
             chunk_context = "\n\n".join(relevant_chunks) if relevant_chunks else sop_context[:4000]
             assessment = assess_requirement(req, chunk_context)
+            assessment = validate_citations(assessment, relevant_chunks)
             finding = create_finding_from_assessment(analysis_id, req, assessment)
             
             session.add(finding)
