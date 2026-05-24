@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import finding_card %}
 
 {% block title %}Gap Analysis Report - Project Gappy{% endblock %}
 
@@ -12,14 +13,18 @@
         </div>
         
         <div class="flex gap-3">
-            <button onclick="window.print()" 
-                    class="px-5 py-2.5 rounded-2xl border border-slate-300 text-sm font-medium flex items-center gap-x-2 hover:bg-slate-50">
+            <a href="/analyses/{{ analysis.id }}/export/pdf" 
+               class="px-5 py-2.5 rounded-2xl border border-slate-300 text-sm font-medium flex items-center gap-x-2 hover:bg-slate-50">
                 <span>Export as PDF</span>
-            </button>
-            <button onclick="alert('Excel export coming soon')" 
-                    class="px-5 py-2.5 rounded-2xl bg-black text-white text-sm font-medium flex items-center gap-x-2">
-                <span>Export to Excel</span>
-            </button>
+            </a>
+            <a href="/analyses/{{ analysis.id }}/export/csv" 
+               class="px-5 py-2.5 rounded-2xl bg-black text-white text-sm font-medium flex items-center gap-x-2 hover:bg-zinc-800">
+                <span>Export to CSV</span>
+            </a>
+            <a href="/analyses/{{ analysis.id }}/export/json" 
+               class="px-5 py-2.5 rounded-2xl border border-slate-300 text-sm font-medium flex items-center gap-x-2 hover:bg-slate-50">
+                <span>JSON</span>
+            </a>
         </div>
     </div>
 

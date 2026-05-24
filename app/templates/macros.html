@@ -1,0 +1,109 @@
+{#
+  Reusable UI Macros - Phase 5
+  Provides reusable components for the Gap Analysis UI
+#}
+
+{% macro finding_card(finding, analysis_id) %}
+<div class="minimal-card rounded-3xl p-8 mb-6 border border-slate-200">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-4">
+        <div>
+            <div class="flex items-center gap-x-3 mb-1">
+                <span class="font-mono text-sm text-slate-500">{{ finding.requirement_id }}</span>
+                <div class="px-3 py-0.5 rounded-full text-xs font-medium 
+                    {% if finding.label == 'COVERED' %}bg-emerald-100 text-emerald-700
+                    {% elif finding.label == 'PARTIAL' %}bg-amber-100 text-amber-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ finding.label }}
+                </div>
+            </div>
+            <div class="text-sm text-slate-600">
+                Confidence: <span class="font-semibold">{{ (finding.confidence * 100)|int }}%</span>
+            </div>
+        </div>
+        
+        <!-- Status Badge -->
+        {% if finding.status == 'PENDING_OFFICER' %}
+            <div class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+                Pending Officer Review
+            </div>
+        {% elif finding.status == 'PENDING_SUPERVISOR' %}
+            <div class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+                Pending Supervisor Review
+            </div>
+        {% elif finding.status == 'FINAL' %}
+            <div class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+                Final
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Rationale -->
+    <div class="text-sm text-slate-600 mb-6">{{ finding.rationale }}</div>
+
+    <!-- Decision Actions -->
+    {% if finding.status == 'PENDING_OFFICER' %}
+    <div class="mb-6 pt-4 border-t border-slate-100">
+        <div class="section-header mb-3">Your Decision</div>
+        <div class="flex flex-wrap gap-2">
+            <form action="/findings/{{ finding.id }}/review/officer" method="post" class="inline">
+                <input type="hidden" name="decision" value="ACCEPT">
+                <button type="submit" class="px-4 py-2 text-sm rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors">
+                    ✓ Accept
+                </button>
+            </form>
+            
+            <form action="/findings/{{ finding.id }}/review/officer" method="post" class="inline">
+                <input type="hidden" name="decision" value="DISPUTE">
+                <button type="submit" class="px-4 py-2 text-sm rounded-xl bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
+                    ✗ Dispute
+                </button>
+            </form>
+            
+            <form action="/findings/{{ finding.id }}/clarify" method="post" class="inline">
+                <input type="hidden" name="comment" value="Clarification requested by officer">
+                <button type="submit" class="px-4 py-2 text-sm rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-medium transition-colors">
+                    ❓ Request Clarification
+                </button>
+            </form>
+            
+            {% if finding.undo_until %}
+            <form action="/findings/{{ finding.id }}/undo" method="post" class="inline" onsubmit="return confirm('Undo this decision?')">
+                <button type="submit" class="px-4 py-2 text-sm rounded-xl border border-slate-300 hover:bg-slate-50 font-medium transition-colors">
+                    ↩ Undo
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% elif finding.status == 'PENDING_SUPERVISOR' %}
+    <div class="mb-6 pt-4 border-t border-slate-100">
+        <div class="text-xs text-slate-500">Waiting for Supervisor review</div>
+    </div>
+    {% endif %}
+
+    <!-- Missing Aspects -->
+    {% if finding.missing_aspects %}
+    <div class="mb-4">
+        <div class="text-xs font-medium text-slate-500 mb-2">Missing Aspects</div>
+        <ul class="text-sm text-slate-600 list-disc pl-5 space-y-1">
+            {% for aspect in finding.missing_aspects %}
+            <li>{{ aspect }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Evidence -->
+    {% if finding.evidence %}
+    <div>
+        <div class="text-xs font-medium text-slate-500 mb-2">Evidence from SOPs</div>
+        <div class="text-sm text-slate-600 space-y-1">
+            {% for ev in finding.evidence[:3] %}
+            <div class="pl-3 border-l-2 border-slate-200">{{ ev }}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
