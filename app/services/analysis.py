@@ -93,6 +93,48 @@ def load_sop_context(sop_doc_ids: List[str], session: Session, max_chars: int = 
 
 
 # =============================================================================
+# STAGE 2.5: Chunking & Retrieval (Phase 2 Enhancement)
+# =============================================================================
+
+def chunk_text(text: str, max_chars: int = 800, overlap: int = 100) -> List[str]:
+    """
+    Split text into overlapping chunks for better retrieval.
+    """
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + max_chars
+        chunk = text[start:end]
+        chunks.append(chunk.strip())
+        start = end - overlap
+        if start >= len(text):
+            break
+    return [c for c in chunks if len(c) > 100]
+
+
+def retrieve_relevant_chunks(requirement: Dict[str, Any], sop_context: str, top_k: int = 5) -> List[str]:
+    """
+    Simple retrieval: find chunks most relevant to the requirement.
+    Currently uses keyword overlap. Can be upgraded to embeddings later.
+    """
+    chunks = chunk_text(sop_context)
+    if not chunks:
+        return []
+    
+    req_keywords = set(re.findall(r'\b\w{4,}\b', requirement['action'].lower()))
+    
+    scored_chunks = []
+    for chunk in chunks:
+        chunk_keywords = set(re.findall(r'\b\w{4,}\b', chunk.lower()))
+        overlap = len(req_keywords & chunk_keywords)
+        scored_chunks.append((overlap, chunk))
+    
+    scored_chunks.sort(reverse=True, key=lambda x: x[0])
+    return [chunk for score, chunk in scored_chunks[:top_k] if score > 0]
+
+
+
+# =============================================================================
 # STAGE 3: LLM Assessment
 # =============================================================================
 
@@ -259,7 +301,9 @@ def run_gap_analysis(
         
         # Stage 3 & 4: Assess and create findings
         for req in requirements[:30]:  # Reasonable limit
-            assessment = assess_requirement(req, sop_context)
+            relevant_chunks = retrieve_relevant_chunks(req, sop_context)
+            chunk_context = "\n\n".join(relevant_chunks) if relevant_chunks else sop_context[:4000]
+            assessment = assess_requirement(req, chunk_context)
             finding = create_finding_from_assessment(analysis_id, req, assessment)
             
             session.add(finding)
