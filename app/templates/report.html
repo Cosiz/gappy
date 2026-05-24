@@ -11,6 +11,9 @@
             <div class="text-3xl font-semibold tracking-tighter">Gap Analysis Report</div>
             <div class="text-slate-500 mt-1">{{ findings|length }} findings found</div>
         </div>
+        <div class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-mono">
+            Role: {{ request.headers.get('x-user-role', 'officer') | upper }}
+        </div>
         
         <div class="flex gap-3">
             <a href="/analyses/{{ analysis.id }}/export/pdf" 
@@ -75,20 +78,33 @@
     {% endif %}
 
     <!-- Findings -->
-    <!-- Analysis Selector -->
+    <!-- Analysis History Selector -->
     {% if analyses %}
-    <div class="mb-8">
-        <div class="section-header mb-2">Select Report</div>
-        <form method="get" action="/analyses/report" class="flex gap-3">
-            <select name="analysis_id" onchange="this.form.submit()" 
-                    class="px-4 py-2.5 rounded-2xl border border-slate-300 text-sm min-w-[280px]">
-                {% for a in analyses %}
-                <option value="{{ a.id }}" {% if a.id == analysis.id %}selected{% endif %}>
-                    {{ a.name or 'Analysis' }} — {{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '' }}
-                </option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="px-5 py-2.5 rounded-2xl border border-slate-300 text-sm">View</button>
+    <div class="mb-10">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <div class="section-header">Analysis History</div>
+                <div class="text-xs text-slate-500 mt-0.5">Select a previous run to view its findings</div>
+            </div>
+        </div>
+        <form method="get" action="/analyses/report" class="flex gap-3 items-center">
+            <div class="relative flex-1 max-w-md">
+                <select name="analysis_id" onchange="this.form.submit()" 
+                        class="w-full appearance-none px-4 py-3 rounded-2xl border border-slate-300 text-sm bg-white pr-10 focus:outline-none focus:border-black">
+                    {% for a in analyses %}
+                    <option value="{{ a.id }}" {% if a.id == analysis.id %}selected{% endif %}>
+                        {{ a.name or 'Gap Analysis' }} — {{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '' }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                    ▼
+                </div>
+            </div>
+            <button type="submit" 
+                    class="px-6 py-3 rounded-2xl border border-slate-300 text-sm font-medium hover:bg-slate-50 transition-colors">
+                View Report
+            </button>
         </form>
     </div>
     {% endif %}
