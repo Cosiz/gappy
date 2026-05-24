@@ -8,6 +8,8 @@ from app.services.analysis import run_gap_analysis
 from app.models.analysis import AnalysisRun
 from app.models.finding import Finding
 from app.models.document import Document
+from fastapi.responses import StreamingResponse
+from app.services.export import export_as_json, export_as_csv, export_as_pdf
 
 router = APIRouter(prefix="/analyses", tags=["analyses"])
 
@@ -128,4 +130,41 @@ async def run_analysis(
     return RedirectResponse(
         url=f"/analyses/report?analysis_success=1&findings={len(findings)}",
         status_code=303
+    )
+
+
+# =============================================================================
+# Export Endpoints (Phase 4)
+# =============================================================================
+
+@router.get("/{analysis_id}/export/json")
+async def export_json(analysis_id: str, session: Session = Depends(get_session)):
+    """Export analysis findings as JSON."""
+    json_data = export_as_json(analysis_id, session)
+    return StreamingResponse(
+        iter([json_data]),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="analysis_{analysis_id[:8]}.json"'}
+    )
+
+
+@router.get("/{analysis_id}/export/csv")
+async def export_csv(analysis_id: str, session: Session = Depends(get_session)):
+    """Export analysis findings as CSV."""
+    csv_data = export_as_csv(analysis_id, session)
+    return StreamingResponse(
+        iter([csv_data]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="analysis_{analysis_id[:8]}.csv"'}
+    )
+
+
+@router.get("/{analysis_id}/export/pdf")
+async def export_pdf(analysis_id: str, session: Session = Depends(get_session)):
+    """Export analysis findings as PDF."""
+    pdf_bytes = export_as_pdf(analysis_id, session)
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="analysis_{analysis_id[:8]}.pdf"'}
     )
