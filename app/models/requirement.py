@@ -9,6 +9,7 @@ class Requirement(SQLModel, table=True):
     requirement_id: str = Field(index=True)
     document_id: str = Field(foreign_key="documents.id")
     obligation_type: str
+    severity: str | None = None  # HIGH / MEDIUM / LOW
     subject: str
     action: str
     verbatim: str

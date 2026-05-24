@@ -41,6 +41,13 @@ class Finding(SQLModel, table=True):
     # New: Comment history for audit trail
     comment_history: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
 
+
+    evidence: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    citations: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
+    confidence_score: float | None = None
+    undo_until: datetime | None = None
+    workflow_state: str | None = None  # e.g. "UNDER_REVIEW", "AWAITING_SUPERVISOR"
+
     status: FindingStatus = FindingStatus.PENDING_OFFICER
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
